@@ -9,7 +9,8 @@ constexpr int physicsRate{ 5 };
 constexpr int gridWidth{ screenWidth / cellSize };
 constexpr int gridHeight{ screenHeight / cellSize };
 
-const char* instructions{ "[SPACE] pause, [MOUSE] draw/erase, [R] random board, [C] clear board" };
+const char* binds{ "[SPACE] pause, [MOUSE] draw/erase, [R] random board, [C] clear board" };
+const char* entities{ "ENTITES: [1] glider" };
 
 typedef struct Cell {
     Vector2 position;  
@@ -22,19 +23,8 @@ typedef struct Cell {
     }
 } Cell;
 
-static int numberOfAliveNeighbours(Cell (&matrix)[gridWidth][gridHeight], int x, int y) {
-    int result{ matrix[x][y].isAlive ? -1 : 0 };
-
-    for (int i = ((x > 0) ? (x - 1) : (0)); i <= ((x < gridWidth - 1) ? (x + 1) : x); ++i) {
-        for (int j = ((y > 0) ? (y - 1) : (0)); j <= ((y < gridHeight - 1) ? (y + 1) : y); ++j) {
-            if (matrix[i][j].isAlive == true) {
-                ++result;
-            }
-        }
-    }
-
-    return result;
-}
+static int numberOfAliveNeighbours(Cell(&matrix)[gridWidth][gridHeight], int x, int y);
+static void drawGlider(Cell(&matrix)[gridWidth][gridHeight], int x, int y);
 
 int main() {
     InitWindow(screenWidth, screenHeight, "Conway's game of life");
@@ -124,6 +114,9 @@ int main() {
                 }
             }
         }
+        if (IsKeyPressed(KEY_ONE)) {
+            drawGlider(cellMatrix, GetMouseX() / cellSize, GetMouseY() / cellSize);
+        }
 
         BeginDrawing();
 
@@ -149,13 +142,45 @@ int main() {
             }
 
             // drawing hud 
-            DrawRectangle(0, 0, screenWidth, 40, Fade(BLACK, 0.7f));
-            DrawText(instructions, 12, 12, 20, BLACK);
-            DrawText(instructions, 10, 10, 20, WHITE);
+            DrawRectangle(0, 0, screenWidth, 55, Fade(BLACK, 0.7f));
+            DrawText(binds, 12, 12, 20, BLACK);
+            DrawText(binds, 10, 10, 20, WHITE);
+            DrawText(entities, 10, 35, 10, WHITE);
 
         EndDrawing();
     }
 
     CloseWindow();
     return 0;
+}
+
+static int numberOfAliveNeighbours(Cell(&matrix)[gridWidth][gridHeight], int x, int y) {
+    int result{ matrix[x][y].isAlive ? -1 : 0 };
+
+    for (int i = ((x > 0) ? (x - 1) : (0)); i <= ((x < gridWidth - 1) ? (x + 1) : x); ++i) {
+        for (int j = ((y > 0) ? (y - 1) : (0)); j <= ((y < gridHeight - 1) ? (y + 1) : y); ++j) {
+            if (matrix[i][j].isAlive == true) {
+                ++result;
+            }
+        }
+    }
+
+    return result;
+}
+
+static void drawGlider(Cell(&matrix)[gridWidth][gridHeight], int x, int y) {
+    if (x > gridWidth - 3 || y > gridHeight - 3)
+        return;
+
+    matrix[x + 0][y].isAlive = false;
+    matrix[x + 1][y].isAlive = true;
+    matrix[x + 2][y].isAlive = false;
+
+    matrix[x + 0][y + 1].isAlive = false;
+    matrix[x + 1][y + 1].isAlive = false;
+    matrix[x + 2][y + 1].isAlive = true;
+
+    matrix[x + 0][y + 2].isAlive = true;
+    matrix[x + 1][y + 2].isAlive = true;
+    matrix[x + 2][y + 2].isAlive = true;
 }
